@@ -83,17 +83,19 @@ data = shuffle(data)
 pos_file = st.file_uploader("Choose a Positive seq file")
 if pos_file is not None:
     file = StringIO(pos_file.getvalue().decode("utf-8"))
-    pos_df = read_seq(file, isPositive=True)
+    pos_df, pos_dna = read_seq(file, isPositive=True)
 
 neg_file = st.file_uploader("Choose a Negative seq file")
 if neg_file is not None:
     file = StringIO(neg_file.getvalue().decode("utf-8"))
-    neg_df = read_seq(file, isPositive=False)
+    neg_df, neg_dna = read_seq(file, isPositive=False)
 
 label = preprocessing.LabelEncoder()
-if (pos_file is not None) & (neg_file is not None):
+has_input =  (pos_file is not None) & (neg_file is not None)
+if has_input:
     data = pd.concat([pos_df, neg_df], axis = 0)
     data = pd.concat([(data.iloc[:, :-1]).apply(label.fit_transform), data.iloc[:,-1:]], axis = 1)
+    data_dna = pd.concat([pos_dna, neg_dna], axis = 0, ignore_index=True)
 
 models_name = models.keys()
 options = st.multiselect('Choose models', models_name, models.keys())
@@ -106,3 +108,16 @@ cmps = [ make_cm_plot(result) for result in results ]
 if len(cmps) != 0:
     for cmp in cmps:
         st.pyplot(cmp)
+
+
+if has_input & len(results) != 0 :
+    for result in results:
+        name = result["Model"]
+        df = pd.DataFrame(data = {
+            "actual": result["y_test"],
+            "predict": result["pred"].flatten()
+        })
+        df['validation'] = df.apply(lambda row: row.actual == row.predict, axis=1)
+        df = pd.concat([data_dna, df], axis=1)
+        st.header(name)
+        st.dataframe(df)
