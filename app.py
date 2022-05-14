@@ -3,7 +3,10 @@ import numpy as np
 import pandas as pd
 from tensorflow import keras
 import matplotlib.pyplot as plt
+from utils import read_seq
+from io import StringIO
 from sklearn.utils import shuffle
+from sklearn import preprocessing
 from sklearn.metrics import roc_auc_score, roc_curve, matthews_corrcoef
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
@@ -16,7 +19,6 @@ models = {
 }
 
 def make_predict_result(data, model_name): 
-    features = data.columns[0: -1]
     X_test, y_test =  np.array(data.iloc[:, :-1]), np.array(data.iloc[:, -1])
     model = models[model_name]
     pred = (model.predict(X_test) > 0.5) * 1 
@@ -78,9 +80,20 @@ st.header("Protein Glutarylation Sites Prediction")
 data = pd.read_csv('./dataset/Test_Encoded.csv', index_col=0) 
 data = shuffle(data)
 
-uploaded_file = st.file_uploader("Choose a CSV file")
-if uploaded_file is not None:
-    data = pd.read_csv(uploaded_file)
+pos_file = st.file_uploader("Choose a Positive seq file")
+if pos_file is not None:
+    file = StringIO(pos_file.getvalue().decode("utf-8"))
+    pos_df = read_seq(file, isPositive=True)
+
+neg_file = st.file_uploader("Choose a Negative seq file")
+if neg_file is not None:
+    file = StringIO(neg_file.getvalue().decode("utf-8"))
+    neg_df = read_seq(file, isPositive=False)
+
+label = preprocessing.LabelEncoder()
+if (pos_file is not None) & (neg_file is not None):
+    data = pd.concat([pos_df, neg_df], axis = 0)
+    data = pd.concat([(data.iloc[:, :-1]).apply(label.fit_transform), data.iloc[:,-1:]], axis = 1)
 
 models_name = models.keys()
 options = st.multiselect('Choose models', models_name, models.keys())
