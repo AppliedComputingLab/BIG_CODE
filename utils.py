@@ -13,4 +13,4 @@ def read_seq(fileobj, isPositive):
     df = pd.DataFrame(data_dna, columns=['DNA'])
     df  = df['DNA'].str.split('',expand=True).iloc[:,1:-2:]
     df['Class'] = 1 if isPositive == True else 0
-    return df, pd.DataFrame(data_dna, columns=['DNA'])
+    return df, pd.DataFrame(data_dna, columns=['Glutarylation Sites'])

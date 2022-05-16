@@ -71,15 +71,33 @@ def make_roc_figure(results):
 def make_cm_plot(result): 
     fig, ax = plt.subplots(figsize=(10, 8))
     name = result["Model"]
-    ax.set_title(f'confusion matrix of {name}', fontweight='bold', fontsize=15)
+    ax.set_title(f' {name} Confusion Matrix', fontweight='bold', fontsize=15)
     cmp = ConfusionMatrixDisplay(result["confusion_matrix"], display_labels=[0, 1])
     cmp.plot(ax=ax)
     return fig
 
-st.header("Protein Glutarylation Sites Prediction")
+st.header("DNN-E for Protein Glutarylation Sites Prediction")
 data = pd.read_csv('./dataset/Test_Encoded.csv', index_col=0) 
 data = shuffle(data)
 
+with st.expander("Instructions"):
+    st.write("""
+        Deep Neural Network Framework Based on Word Embedding for Protein Glutarylation Sites Prediction
+        Authors: Chuan-Ming Liu *, Van-Dai Ta, Nguyen Quoc Khanh Le, Direselign Addis Tadesse and Chongyang Shi *
+
+        Instructions 
+        This application is designed for testing the Deep Neural Network using the Embedding platform to predict the glutarylation sites.  The testing will be executed in the following steps
+        
+        First, load the input test sets under the FASTA format (.seq extension), including positive (glutarylation) and negative (non-glutarylation) sequences. As explained in the manuscript, 138 glutarylation sites (92 glutarylation, 46 non- glutarylation) has been used in this experiment. Both glutarylation and non- glutarylation sites will be concatenated into one single dataframe before encoded by label encoding. We only use the actual class of those sequences for evaluation, by plotting the confusion matrix, and ROC-AUC.
+        
+        After loading the input files, the model selection proposed to select the deep neural network model for glutarylation prediction. This allows use either to choose a specific model or multiple models to perform.
+        The prediction results are automatically displayed as the model selected, including confusion matrix, ROC-AUC, and detailed results for each glutaration site. 
+        For more detailed information about this project, please refer to our manuscript and Github repository
+        https://github.com/AppliedComputingLab/BIO_DNNE
+
+    """)
+
+st.text('Load the test datasets(.sed file extension)')
 pos_file = st.file_uploader("Choose a Positive seq file")
 if pos_file is not None:
     file = StringIO(pos_file.getvalue().decode("utf-8"))
@@ -98,7 +116,7 @@ if has_input:
     data_dna = pd.concat([pos_dna, neg_dna], axis = 0, ignore_index=True)
 
 models_name = models.keys()
-options = st.multiselect('Choose models', models_name, models.keys())
+options = st.multiselect('Model selection', models_name, models.keys())
 
 results = [ make_predict_result(data, opt) for opt in options ]
 fig = make_roc_figure(results)
